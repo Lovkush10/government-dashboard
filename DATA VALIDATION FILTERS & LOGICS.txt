@@ -1,0 +1,228 @@
+# Complete List of Data Filters, Logics, and Audits - Government Application Dashboard
+
+## 📊 **DATA VALIDATION FILTERS & LOGICS**
+
+### **Mandatory Field Enforcement**
+- **applicationId**: Must be numeric, positive, and unique
+- **applicationStatusDescription**: Required, must match predefined status values
+- **creationTimeStamp**: Must be valid ISO date format
+- **baseDepartmentName**: Required, trimmed, max 100 characters
+- **categoryCode**: Required, must exist in master data
+- **applicantDistrictName**: Required, cross-referenced with district master
+
+### **Data Type Validation Logic**
+- **Numeric Fields**: applicationId, baseDepartmentId, districtId validated as positive numbers
+- **Date Fields**: creationTimeStamp, lastActionDate validated for proper date format
+- **String Fields**: Length limits enforced (applicantName < 100 chars, department names < 200 chars)
+- **Boolean Fields**: isActive, processedFlag validated as true/false
+- **JSON Fields**: metadata, actionMetadata validated for proper JSON structure
+
+### **Cross-Sheet Consistency Logic**
+- **Application-Action Linking**: Every applicationId in actions must exist in application details
+- **Department Reference**: baseDepartmentId must exist in basedepartment.xlsx
+- **Category Reference**: categoryCode must exist in applicationcategorymaster.xlsx  
+- **District Reference**: districtId must exist in district.xlsx
+- **Orphaned Record Detection**: Actions without corresponding applications flagged as critical issues
+
+### **Duplicate Detection Logic**
+- **Primary Key Duplicates**: Multiple applicationIds in same sheet flagged
+- **Cross-Sheet Duplicates**: Same applicationId across multiple files detected
+- **Action Duplicates**: Multiple actions for same applicationId in single file
+- **Resolution Logic**: Keep latest record based on creationTimeStamp
+- **Duplicate Rate Monitoring**: Target <5% duplicate rate with alerts if exceeded
+
+## 🔍 **DATA QUALITY FILTERS**
+
+### **Status Value Validation**
+- **Hindi Statuses**: स्वीकृत (Approved), लंबित (Pending), निराकृत (Rejected)
+- **English Statuses**: Approved, Pending, Rejected, Under Review, Processing
+- **Status Normalization**: Map variations to standard values
+- **Invalid Status Rejection**: Unknown statuses flagged as errors
+
+### **Data Range Validation**
+- **Date Ranges**: creationTimeStamp cannot be future date
+- **Numeric Ranges**: applicationAmount must be non-negative
+- **String Validation**: No empty required fields, no XSS/malicious content
+- **File Size Limits**: 10MB per Excel file, maximum 37 files per upload
+
+### **Data Normalization Logic**
+- **Text Standardization**: Trim whitespace, standardize case
+- **Department Name Mapping**: "Panchayat" vs "Panchayat & Rural Development" normalized
+- **Status Mapping**: Hindi/English status variations mapped to single standard
+- **Address Standardization**: Clean applicant addresses for consistency
+
+## 📋 **FILE STRUCTURE VALIDATION**
+
+### **File Format Filters**
+- **Extension Validation**: Only .xlsx and .xls files accepted
+- **MIME Type Check**: Verify actual Excel format, not just extension
+- **File Count Limit**: Maximum 37 files per batch upload
+- **Size Restrictions**: Individual file limit 10MB, total batch limit 370MB
+
+### **Header Validation Logic**
+- **Expected Headers**: Validate against 75+ predefined header list
+- **Mandatory Headers**: Ensure critical headers present in each file type
+- **Header Mapping**: Map variations (e.g., "Application ID" vs "applicationId")
+- **Missing Header Alerts**: Flag files with incomplete header sets
+
+### **Sheet Structure Validation**
+- **Sheet Count**: Validate expected number of sheets per file
+- **Data Presence**: Ensure sheets contain data beyond headers
+- **Empty Row Handling**: Skip empty rows, log if excessive empty data
+
+## 🔄 **PROCESSING LOGIC & WORKFLOW**
+
+### **Batch Processing Logic**
+- **Sequential Processing**: Files processed in order with progress tracking
+- **Error Isolation**: Single file failure doesn't stop entire batch
+- **Rollback Mechanism**: Failed batch processing can be rolled back
+- **Memory Management**: Large files processed in chunks to prevent crashes
+
+### **Incremental Update Logic**
+- **New Record Detection**: Identify applicationIds not in existing data
+- **Update Detection**: Compare creationTimeStamp for existing records
+- **Change Tracking**: Log what fields changed in updated records
+- **Version Control**: Maintain history of record modifications
+
+### **Data Aggregation Logic**
+- **Status Counting**: Real-time calculation of approved/pending/rejected counts
+- **Department Analysis**: Aggregate applications by department
+- **District Distribution**: Geographic spread analysis
+- **Time Series**: Monthly/quarterly trend calculations
+- **Performance Metrics**: Processing speed, success rates, error rates
+
+## 🚨 **CRITICAL ISSUE DETECTION**
+
+### **Severity Classification Logic**
+- **Critical Issues**: Duplicates, missing mandatory fields, orphaned records
+- **High Issues**: Invalid references, data type violations, cross-sheet inconsistencies
+- **Medium Issues**: Format inconsistencies, minor validation failures
+- **Low Issues**: Warnings about data quality, optimization suggestions
+
+### **Issue Resolution Workflow**
+- **Auto-Resolution**: Duplicates resolved by keeping latest timestamp
+- **Manual Review Queue**: Issues requiring human intervention
+- **Resolution Tracking**: Log who resolved what and when
+- **Escalation Logic**: Unresolved critical issues escalated after 24 hours
+
+## 📊 **DATA HEALTH SCORING**
+
+### **Health Score Calculation**
+- **Completeness Score**: (Valid records / Total records) × 100
+- **Consistency Score**: (Records with valid references / Total) × 100  
+- **Accuracy Score**: (Error-free records / Total records) × 100
+- **Overall Health**: Weighted average targeting >95%
+
+### **Quality Metrics Tracking**
+- **Error Rate Monitoring**: Track validation failures over time
+- **Duplicate Rate Trends**: Monitor duplicate patterns
+- **Processing Success Rate**: Upload success vs failure rates
+- **Data Freshness**: Track age of data and update frequency
+
+## 🔐 **SECURITY & PRIVACY FILTERS**
+
+### **Data Sanitization Logic**
+- **XSS Prevention**: Remove script tags and malicious content
+- **SQL Injection Protection**: Sanitize data before database operations
+- **Input Validation**: Validate all user inputs and file contents
+- **Content Security**: Block suspicious file patterns or content
+
+### **Sensitive Data Handling**
+- **PII Identification**: Flag applicantName, phone, email as sensitive
+- **Data Masking**: Hide sensitive data based on user role
+- **Encryption Logic**: Encrypt sensitive fields in database storage
+- **Access Control**: Role-based access to sensitive information
+
+### **DPDP Act Compliance**
+- **Data Minimization**: Only collect necessary fields
+- **Consent Tracking**: Log data processing consent where applicable
+- **Retention Policy**: 90-day audit log retention, configurable data retention
+- **Breach Detection**: Monitor for unauthorized access patterns
+
+## 📈 **AUDIT TRAILS & LOGGING**
+
+### **Comprehensive Logging Logic**
+- **Operation Logging**: Every upload, export, and data modification logged
+- **User Activity**: Track who did what, when, and from where
+- **Error Logging**: Detailed error messages with row-level granularity
+- **Performance Logging**: Track processing times and resource usage
+
+### **Audit Trail Filters**
+- **User-Based Filtering**: View logs by specific user or role
+- **Date Range Filtering**: Filter audit logs by time period
+- **Operation Type Filtering**: Filter by upload, export, validation, etc.
+- **Severity Filtering**: Filter logs by info, warning, error, critical
+
+### **Compliance Reporting**
+- **Regulatory Reports**: Generate DPDP Act compliance reports
+- **Access Reports**: Who accessed what data and when
+- **Change Reports**: Track all data modifications over time
+- **Export Reports**: Log all data exports and downloads
+
+## 🔄 **AUTOMATED FEED PROCESSING**
+
+### **Feed Validation Logic**
+- **Source Validation**: Verify files from authorized Google Drive folder
+- **Incremental Processing**: Only process new or modified files
+- **Batch Size Management**: Process feeds in manageable batches
+- **Error Recovery**: Retry failed feed processing with exponential backoff
+
+### **Feed Quality Assurance**
+- **Pre-Processing Validation**: Validate feeds before importing
+- **Data Consistency Checks**: Ensure feeds match existing data structure
+- **Notification Logic**: Alert admins of feed issues via Telegram/email
+- **Rollback Capability**: Ability to rollback failed feed imports
+
+## 📊 **PERFORMANCE & SCALABILITY**
+
+### **Optimization Logic**
+- **Caching Strategy**: Cache frequently accessed data and metrics
+- **Lazy Loading**: Load data on-demand to improve initial load times
+- **Memory Management**: Efficient handling of large Excel files
+- **Database Optimization**: Indexed queries for fast data retrieval
+
+### **Scalability Filters**
+- **Load Balancing**: Distribute processing across serverless functions
+- **Rate Limiting**: Prevent system overload from excessive requests  
+- **Resource Monitoring**: Track CPU, memory, and database usage
+- **Auto-Scaling Logic**: Scale resources based on load
+
+## 🎯 **BUSINESS LOGIC FILTERS**
+
+### **Government-Specific Logic**
+- **Department Hierarchy**: Handle nested department structures
+- **Status Workflow**: Enforce proper status transition rules
+- **Priority Handling**: Process high-priority applications first
+- **Geographic Logic**: District-wise analysis and reporting
+
+### **Compliance & Governance**
+- **Regulatory Alignment**: Ensure data processing follows government guidelines
+- **Workflow Compliance**: Maintain proper approval workflows
+- **Reporting Standards**: Generate reports in required government formats
+- **Data Governance**: Enforce data quality and management policies
+
+## 📈 **MONITORING & ALERTING**
+
+### **Real-Time Monitoring**
+- **System Health Monitoring**: Track dashboard performance and uptime
+- **Data Quality Monitoring**: Continuous assessment of data health scores
+- **User Activity Monitoring**: Track usage patterns and anomalies
+- **Error Rate Monitoring**: Alert when error rates exceed thresholds
+
+### **Alert Logic**
+- **Threshold-Based Alerts**: Notify when metrics exceed defined limits
+- **Anomaly Detection**: Identify unusual patterns in data or usage
+- **Escalation Logic**: Route alerts to appropriate personnel based on severity
+- **Alert Fatigue Prevention**: Intelligent alert grouping and suppression
+
+## 🎯 **TOTAL COUNT: 100+ FILTERS, LOGICS & AUDITS**
+
+The comprehensive system includes:
+- **25+ Validation Filters** for data integrity
+- **20+ Processing Logic** components for workflow management  
+- **15+ Security & Privacy** filters for compliance
+- **20+ Audit & Logging** mechanisms for traceability
+- **10+ Performance** optimizations for scalability
+- **10+ Business Logic** filters for government-specific requirements
+
+All designed to handle your **37 Excel files** with **~1,987 applications**, targeting **>95% data health score** and **<5% duplicate rate** while ensuring enterprise-grade security, compliance, and performance.
