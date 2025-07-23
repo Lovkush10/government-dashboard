@@ -1,0 +1,36 @@
+{
+  "build": {
+    "builder": "python",
+    "buildCommand": "pip install -r requirements.txt"
+  },
+  "start": "cd server && npm install && npm start",
+  "envs": [
+    {
+      "name": "OPENAI_API_KEY",
+      "required": true
+    },
+    {
+      "name": "MODE",
+      "value": "production"
+    },
+    {
+      "name": "MONITOR_ENABLED",
+      "value": "true"
+    },
+    {
+      "name": "RAILWAY_TOKEN",
+      "required": true
+    }
+  ],
+  "healthcheckPath": "/api/health",
+  "service": {
+    "startCommand": "python3 main.py",
+    "monitor": [
+      {
+        "path": "logs/chatgpt_monitor.py",
+        "enabled": true,
+        "schedule": "@every 2m"
+      }
+    ]
+  }
+}
