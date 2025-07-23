@@ -1,0 +1,18 @@
+name: 🚨 Notify on Failure
+
+on:
+  workflow_dispatch:  # Manual trigger
+  push:
+    paths:
+      - 'logs/error.log'
+      - 'logs/failure.log'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Run failure notifier
+        run: ./.betterstack/notify_on_failure.sh
